@@ -69,6 +69,12 @@ Utilities for maintaining and servicing PowerPC systems.
 /usr/sbin/pseries_platform
 /usr/sbin/errinjct
 /usr/sbin/rtas_dbg
+/usr/sbin/hcnmgr
+/usr/sbin/hcncfgdrc
+/usr/sbin/hcnqrydev
+/usr/sbin/hcnrmdev
+/usr/sbin/hcnrmhcn
+/usr/sbin/hcnversion
 
 /usr/bin/amsstat
 

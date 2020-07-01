@@ -3,12 +3,12 @@ powerpc-utils package
 
 Mailing List: powerpc-utils-devel@googlegroups.com
 
-This package contains utilities which are intended for maintenance of IBM 
+This package contains utilities which are intended for maintenance of IBM
 powerpc platforms that follow the POWER Architecture Platform Reference (PAPR),
 This package requires the librtas package in order to function properly.
 All of these utilities must be run as root.
 
-The virtual IO administration utilities included in this package require the 
+The virtual IO administration utilities included in this package require the
 systool application.
 
 Further documentation for each of these utilities is available in their
@@ -78,8 +78,13 @@ Used during concurrent firmware update operations to activate the new
 firmware image locally.  This utility is invoked automatically when
 necessary.
 
-rtas_ibm_get_vpd:  
+rtas_ibm_get_vpd:
 ----------------
 Used by the lsvpd utility to gather Vital Product Data that changes
 dynamically.
+
+hcnmgr:
+---------
+This utility provides the HMC tools to hybrid virtual network to allow
+SR_IOV VFs on LPAR capable for live partition migration.
 
