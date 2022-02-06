@@ -399,7 +399,13 @@ do_config_vdevice_wicked() {
 	if systemctl is-active -q wicked.service ; then
 		# Apply the config changes to wicked
 		hcnlog DEBUG "Bring up the $BONDNAME interface"
-		wicked ifreload "$BONDNAME"
+		wicked ifup "$BONDNAME"
+
+		# workaround: make sure the primary gets applied
+		# so kernel reselect it as primary
+		if [[ $MODE == "primary" ]]; then
+			echo "$DEVNAME" > "$BOND_PATH/primary"
+		fi
 	fi
 
 	hcnlog DEBUG "do_config_vdevice: exit"
