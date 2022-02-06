@@ -428,8 +428,8 @@ do_config_vdevice() {
 #	add device as bonding slave
 #
 # $1 DRC_INDEX of the hybrid network device
-#
-cfghcn() {
+
+cfghcn_nm() {
 	local retry=3
 
 	hcnlog DEBUG "cfghcn: enter $1"
@@ -455,6 +455,52 @@ cfghcn() {
 
 	return $E_SUCCESS
 }
+
+#
+# function cfghcn wicked
+#	Given device DRC_INDEX, configure or create HCN (active-backup bonding)
+#	add device as bonding slave
+#
+# $1 DRC_INDEX of the hybrid network device
+#
+cfghcn_wicked() {
+
+	hcnlog DEBUG "cfghcn wicked: enter $1"
+
+	hcnlog DEBUG "cfg_hcn wicked: wait for udev events complete, udevadm settle"
+	udevadm settle
+	search_dev "$1"
+
+	hcnlog DEBUG "cfg_hcn: calling do_confi_vdevice to enslave $DEVNAME to HNV"
+	do_config_vdevice
+
+	hcnlog DEBUG "cfghcn wicked: exit"
+	return $E_SUCCESS
+}
+
+#
+# function cfghcn
+#	Given device DRC_INDEX, configure or create HCN (active-backup bonding)
+#	add device as bonding slave
+#
+# $1 DRC_INDEX of the hybrid network device
+#
+cfghcn() {
+	hcnlog DEBUG "cfghcn: enter $1"
+
+	case $SERVICE in
+		NetworkManager.service)
+			cfghcn_nm $1
+			;;
+		wicked.service)
+			cfghcn_wicked $1
+			;;
+	esac
+
+	hcnlog DEBUG "cfghcn: exit"
+	return $E_SUCCESS
+}
+
 
 rmhcn_nm() {
 	for connection in $(nmcli -f NAME con show | grep "$BONDNAME"); do
