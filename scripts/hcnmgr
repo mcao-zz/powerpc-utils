@@ -31,6 +31,7 @@ PSERIES_PLATFORM=$(dirname "$0")/pseries_platform
 DT_PATH="/proc/device-tree"
 HCNMGR="hcnmgr"
 HCNCMD=""
+HCNTRACE="-vx"
 LOG_FILE="/var/log/hcnmgr"
 HCN_LOGGING_LEVEL=DEBUG
 HCNID=0
@@ -68,6 +69,7 @@ usage() {
 	echo ""
 	echo "Optional arguments."
 	echo "  -s        scan device-tree and configure HCN"
+	echo "  -x        trace hcnmgr script execution"
 	echo "  -V        Display version information and exit"
 	echo "  -h        Display this help information and exit"
 	echo ""
@@ -954,7 +956,6 @@ scanhcn() {
 	esac
 }
 
-
 # function check_network_service
 #	Check what connection manager is used
 #	On SUSE, it's wicked.sevice (SLES) or NetworkManager.service (SLED)
@@ -1011,6 +1012,7 @@ check_network_service() {
 #
 # Main
 #
+PSTREE="$(pstree -A -l -p -s $$ 2>/dev/null)"
 
 #All echo messages goes into $LOG_FILE
 exec &> >(tee -a $LOG_FILE)
@@ -1021,6 +1023,40 @@ echo "=======================$NOW============================"
 
 HCNCMD=$(basename "$0")
 hcnlog DEBUG "$HCNCMD enter"
+
+#getops for help and version
+while getopts "sxVhd:" arg; do
+	case "$arg" in
+	V)
+		show_version
+		exit 0
+		;;
+	h)
+		usage
+		exit 0
+		;;
+	s)
+		HCNCMD="hcnscan"
+		;;
+	x)
+		HCNTRACE="-x"
+		;;
+	d)
+		hcnlog DEBUG "HMC pass log level at $OPTARG"
+		hcnlog DEBUG "$HCNCMD is always log at $HCN_LOGGING_LEVEL level"
+		;;
+	*)
+		usage
+		exit 1
+		;;
+	esac
+done
+
+#Enable bash -x or -vx call trace if requested
+if [ "X$HCNTRACE" != "X" ] ; then
+	hcnlog INFO "PSTREE: $PSTREE"
+	set "$HCNTRACE"
+fi
 
 #Validate this tool is running on powerpc platform
 . "$PSERIES_PLATFORM"
@@ -1040,31 +1076,6 @@ if ! lsmod | grep -q bonding; then
 		err $E_NOMODULE
 	fi
 fi
-
-#getops for help and version
-while getopts "sVhd:" arg; do
-	case "$arg" in
-	V)
-		show_version
-		exit 0
-		;;
-	h)
-		usage
-		exit 0
-		;;
-	s)
-		HCNCMD="hcnscan"
-		;;
-	d)
-		hcnlog DEBUG "HMC pass log level at $OPTARG"
-		hcnlog DEBUG "$HCNCMD is always log at $HCN_LOGGING_LEVEL level"
-		;;
-	*)
-		usage
-		exit 1
-		;;
-	esac
-done
 
 #Log this scripts command line to syslog
 hcnlog INFO "$HCNCMD $*"
