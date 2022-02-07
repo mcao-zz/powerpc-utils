@@ -43,7 +43,7 @@ VIO_TYPE=""
 DISTRO=""
 SERVICE=""
 
-source /usr/lib/powerpc-utils/functions.suse
+. /usr/lib/powerpc-utils/functions.suse
 
 # Usage statements
 usage() {
@@ -904,10 +904,10 @@ scanhcn_wicked() {
 	#	to mark or remember the hcn managed bonds...
 
 	# (Re)configure all bonds
-	for hcnid in "${hcnids[@]}" ; do
-		local bond="bond$hcnid"
-		local primary="${hcn_primary[$HCNID]}"
-		local devices="${hcn_devs[$HCNID]}"
+	for id in "${hcnids[@]}" ; do
+		local bond="bond$id"
+		local primary="${hcn_primary[$id]}"
+		local devices="${hcn_devs[$id]}"
 
 		hcnlog INFO "scanhcn configure HCN $bond with devices '$devices'"
 		if suse_ifcfg_bond_modify "$bond" "$devices" ; then
