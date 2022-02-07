@@ -44,7 +44,9 @@ VIO_TYPE=""
 DISTRO=""
 SERVICE=""
 
-. /usr/lib/powerpc-utils/functions.suse
+if test -f /usr/lib/powerpc-utils/wicked-bond-ifcfg-tool ; then
+	. /usr/lib/powerpc-utils/functions.suse
+fi
 
 # Usage statements
 usage() {
