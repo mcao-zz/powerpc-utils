@@ -512,10 +512,9 @@ rmhcn_nm() {
 
 rmhcn_wicked() {
 	hcnlog INFO "Delete bonding $BONDNAME"
+	wicked ifdown "$BONDNAME"
 	suse_ifcfg_bond_delete "$BONDNAME"
-	wicked ifreload "$BONDNAME"
 }
-
 #
 # function rmhcn
 #	Given HCNID, remove HCN
