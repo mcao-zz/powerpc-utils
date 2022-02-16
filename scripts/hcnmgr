@@ -423,12 +423,14 @@ do_config_vdevice() {
 			;;
 	esac
 }
+
 #
 # function cfghcn_nm
 #	Given device DRC_INDEX, configure or create HCN (active-backup bonding)
 #	add device as bonding slave
 #
 # $1 DRC_INDEX of the hybrid network device
+#
 cfghcn_nm() {
 	local retry=3
 
