@@ -31,7 +31,7 @@ PSERIES_PLATFORM=$(dirname "$0")/pseries_platform
 DT_PATH="/proc/device-tree"
 HCNMGR="hcnmgr"
 HCNCMD=""
-HCNTRACE="-vx"
+HCNTRACE=""
 LOG_FILE="/var/log/hcnmgr"
 HCN_LOGGING_LEVEL=DEBUG
 HCNID=0
@@ -668,8 +668,6 @@ rmdev_nm() {
 rmdev_wicked() {
 	hcnlog DEBUG "rmdev_wicked: enter"
 	suse_ifcfg_bond_del_slave "$BONDNAME" "$DEVNAME"
-	cat $(suse_ifcfg_file_name "$BONDNAME")
-	#wicked ifreload "$BONDNAME"
 	wicked ifdown "$DEVNAME"
 	wicked ifup "$BONDNAME"
 	hcnlog DEBUG "rmdev_wicked: exit"
@@ -925,18 +923,10 @@ scanhcn_wicked() {
 		else
 			hcnlog INFO "scanhcn failed to adjust bond '$bond' config primary to '$primary'"
 		fi
-		echo "* $bond config:"
-		cat $(suse_ifcfg_file_name "$bond")
 
 		if systemctl is-active -q wicked.service ; then
 			hcnlog INFO "scanhcn reloading HCN bonding: $bond"
 			wicked ifreload "$bond"
-
-
-			echo "* $bond ifstatus:"
-			wicked ifstatus "$bond"
-			echo "* kernel interfaces:"
-			ip -d link show
 		else
 			hcnlog INFO "scanhcn omits HCN bondings reload due inactive network"
 			# at boot, hcn-init.service adjusts the configuration and
@@ -1014,7 +1004,6 @@ check_network_service() {
 #
 # Main
 #
-PSTREE="$(pstree -A -l -p -s $$ 2>/dev/null)"
 
 #All echo messages goes into $LOG_FILE
 exec &> >(tee -a $LOG_FILE)
@@ -1056,7 +1045,6 @@ done
 
 #Enable bash -x or -vx call trace if requested
 if [ "X$HCNTRACE" != "X" ] ; then
-	hcnlog INFO "PSTREE: $PSTREE"
 	set "$HCNTRACE"
 fi
 
@@ -1078,9 +1066,6 @@ if ! lsmod | grep -q bonding; then
 		err $E_NOMODULE
 	fi
 fi
-
-#Log this scripts command line to syslog
-hcnlog INFO "$HCNCMD $*"
 
 #Parse the DRC_INDEX and HCN_ID from the arguments
 for param in "$@"; do
