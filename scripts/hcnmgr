@@ -427,12 +427,11 @@ do_config_vdevice() {
 	esac
 }
 #
-# function cfghcn
+# function cfghcn_nm
 #	Given device DRC_INDEX, configure or create HCN (active-backup bonding)
 #	add device as bonding slave
 #
 # $1 DRC_INDEX of the hybrid network device
-
 cfghcn_nm() {
 	local retry=3
 
@@ -461,7 +460,7 @@ cfghcn_nm() {
 }
 
 #
-# function cfghcn wicked
+# function cfghcn_wicked
 #	Given device DRC_INDEX, configure or create HCN (active-backup bonding)
 #	add device as bonding slave
 #
@@ -504,7 +503,6 @@ cfghcn() {
 	hcnlog DEBUG "cfghcn: exit"
 	return $E_SUCCESS
 }
-
 
 rmhcn_nm() {
 	for connection in $(nmcli -f NAME con show | grep "$BONDNAME"); do
@@ -729,7 +727,7 @@ scanhcn_cleanup_old_hnv_nm() {
 	done
 }
 #
-# function scanhcn
+# function scanhcn_nm
 #	HMC supports adding migratable sr-iov when LPAR is inactive. This allows LPAR
 #	can be migrated when inactive with SR_IOV VFS.	It will set the
 #	migratable sr-iov device and it's backup vdevice vnic or veth with
@@ -829,15 +827,12 @@ scanhcn_nm() {
 }
 
 #
-# function scanhcn wicked
+# function scanhcn_wicked
 #
 #	This function will scan the device-tree to find new SR-IOV vfs and virtual devices
 #	that has configured as migratable sr-iov device or as backup vdevice during LPAR
-#	is inactive.
+#	is inactive (or during manual 'hcnmgr -s' call).
 #
-#
-#
-
 scanhcn_wicked() {
 	local hcnids=()
 	local -A hcn_devs hcn_primary
@@ -893,15 +888,13 @@ scanhcn_wicked() {
 		fi
 	done
 
-	# TODO: delete orphan bond$HCNID configs ... test -- can this happen? :
-	#	when the LPAR has been shut down, an ond$HCNID_old can be removed,
-	#	the configuration changes then,
+	# TODO: when the LPAR has been shut down and the configuration changes then,
 	#	e.g. from: bond$HCNID_old { eth0, eth1 }
 	#	     into: bond$HCNID_new { eth0, eth2 }
 	#	                            ^^^^
 	#     	there is still a config for bond$HCNID_old that we need to remove
-	#	(at boot) _before_ we can setup bond$HCNID_new as the new bond is
-	#	(re)using one slave device of the old bond..
+	#	at LPAR boot _before_ we can setup bond$HCNID_new as the new bond
+	#	is (re)using one slave device of the old bond..
 	#	This requires to know which bond is managed via HCN and we may need
 	#	to mark or remember the hcn managed bonds...
 
@@ -928,7 +921,7 @@ scanhcn_wicked() {
 			hcnlog INFO "scanhcn reloading HCN bonding: $bond"
 			wicked ifreload "$bond"
 		else
-			hcnlog INFO "scanhcn omits HCN bondings reload due inactive network"
+			hcnlog INFO "scanhcn omits HCN bondings reload due to inactive network"
 			# at boot, hcn-init.service adjusts the configuration and
 			# the wicked.service starting after sets up the bondings.
 		fi
@@ -1042,6 +1035,9 @@ while getopts "sxVhd:" arg; do
 		;;
 	esac
 done
+
+#Log this scripts command line to syslog
+hcnlog INFO "$HCNCMD $*"
 
 #Enable bash -x or -vx call trace if requested
 if [ "X$HCNTRACE" != "X" ] ; then
