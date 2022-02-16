@@ -44,9 +44,6 @@ VIO_TYPE=""
 DISTRO=""
 SERVICE=""
 
-if test -f /usr/lib/powerpc-utils/functions.suse ; then
-	. /usr/lib/powerpc-utils/functions.suse
-fi
 
 # Usage statements
 usage() {
@@ -955,10 +952,13 @@ check_network_service() {
 
 	#Validate distro service CLI packages is installed to manage networking
 	case $DISTRO in
-		sles)
+		sles|sled|*suse*)
 			SERVICE=$(systemctl show -P Id network.service 2>/dev/null)
 			case $SERVICE in
 				wicked.service)
+					source /usr/lib/powerpc-utils/functions.suse || \
+					err $E_EPERM "Unable to source SUSE function library"
+
 					if ! wicked --version >/dev/null 2>&1; then
 						err $E_ENETUNREACH "wicked management command not installed"
 					fi
