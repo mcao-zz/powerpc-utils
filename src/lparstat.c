@@ -254,7 +254,7 @@ long long get_delta_value(char *se_name)
 	return (value - old_value);
 }
 
-void get_time()
+void get_time_ns(void)
 {
 	struct sysentry *se;
 	struct timespec ts;
@@ -266,7 +266,12 @@ void get_time()
 
 	se = get_sysentry("time");
 	sprintf(se->value, "%lld",
-		(long long)ts.tv_sec);
+		(long long)ts.tv_sec * 1000000000LL + (long long)ts.tv_nsec);
+}
+
+double get_delta_time(void)
+{
+	return (get_delta_value("time") / 1000000000.0);
 }
 
 int get_time_base()
@@ -307,7 +312,7 @@ double get_scaled_tb(void)
 	se = get_sysentry("online_cores");
 	online_cores = atoi(se->value);
 
-	elapsed = get_delta_value("time");
+	elapsed = get_delta_time();
 
 	se = get_sysentry("timebase");
 	timebase = atoi(se->value);
@@ -386,7 +391,7 @@ void get_cpu_physc(struct sysentry *unused_se, char *buf)
 
 		physc = delta_purr / delta_tb;
 	} else {
-		elapsed = get_delta_value("time");
+		elapsed = get_delta_time();
 
 		se = get_sysentry("timebase");
 		timebase = atoi(se->value);
@@ -415,7 +420,7 @@ void get_cpu_app(struct sysentry *unused_se, char *buf)
 	float timebase, app, elapsed_time;
 	long long new_app, old_app;
 
-	elapsed_time = get_delta_value("time");
+	elapsed_time = get_delta_time();
 
 	se = get_sysentry("timebase");
 	timebase = atof(se->value);
@@ -1018,7 +1023,7 @@ void init_sysdata(void)
 {
 	int rc = 0;
 
-	get_time();
+	get_time_ns();
 	parse_lparcfg();
 	parse_proc_stat();
 	parse_proc_ints();
