@@ -1051,9 +1051,10 @@ static int do_replace(struct dr_node *all_nodes)
 		}
 
 		usr_prompt = prompt_save;
+		return rc;
 	}
 
-	return rc;
+	return 0;
 }
 
 int valid_pci_options(void)
