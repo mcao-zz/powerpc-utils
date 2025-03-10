@@ -37,6 +37,11 @@
 #include "pseries_platform.h"
 #include "cpu_info_helpers.h"
 #include <time.h>
+#include <sys/auxv.h>
+
+#ifndef PPC_FEATURE2_ARCH_3_1
+#define PPC_FEATURE2_ARCH_3_1 0x00040000
+#endif
 
 #define LPARCFG_FILE	"/proc/ppc64/lparcfg"
 #define SE_NOT_FOUND	"???"
@@ -794,7 +799,11 @@ void get_memory_mode(struct sysentry *se, char *buf)
 	struct sysentry *tmp;
 
 	tmp = get_sysentry("entitled_memory_pool_number");
-	if (atoi(tmp->value) == 65535)
+	/*
+	 * from power10 onwards Active Memory Sharing(AMS) is not
+	 * supported. Hence always display it as dedicated for those
+	 */
+	if (atoi(tmp->value) == 65535 || (getauxval(AT_HWCAP2) & PPC_FEATURE2_ARCH_3_1))
 		sprintf(buf, "Dedicated");
 	else
 		sprintf(buf, "Shared");
