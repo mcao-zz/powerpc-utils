@@ -794,11 +794,7 @@ void get_memory_mode(struct sysentry *se, char *buf)
 	struct sysentry *tmp;
 
 	tmp = get_sysentry("entitled_memory_pool_number");
-	/*
-	 * from power10 onwards Active Memory Sharing(AMS) is not
-	 * supported. Hence always display it as dedicated for those
-	 */
-	if (atoi(tmp->value) == 65535 || BUILTIN_CPU_SUPPORTS("arch_3_1"))
+	if (atoi(tmp->value) == 65535)
 		sprintf(buf, "Dedicated");
 	else
 		sprintf(buf, "Shared");

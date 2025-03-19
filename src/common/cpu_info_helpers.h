@@ -47,10 +47,4 @@ extern int __get_one_smt_state(int core, int threads_per_cpu);
 extern int __do_smt(bool numeric, int cpus_in_system, int threads_per_cpu,
 		    bool print_smt_state);
 
-#if defined (__powerpc__) && defined (__BUILTIN_CPU_SUPPORTS__)
-# define BUILTIN_CPU_SUPPORTS(X) __builtin_cpu_supports(X)
-#else
-# define BUILTIN_CPU_SUPPORTS(X) 0
-#endif
-
 #endif /* CPU_INFO_H */
