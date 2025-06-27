@@ -1698,8 +1698,10 @@ static void clear_numa_lmb_links(void)
 	int nid;
 	struct ppcnuma_node *node;
 
-	ppcnuma_foreach_node(&numa, nid, node)
+	ppcnuma_foreach_node(&numa, nid, node) {
 		node->lmbs = NULL;
+        node->n_lmbs = 0;
+    }
 }
 
 static int numa_based_remove(uint32_t count)
@@ -1743,11 +1745,44 @@ static int numa_based_remove(uint32_t count)
 	return 0;
 }
 
+
+static int numa_add_info(uint32_t count)
+{
+	struct lmb_list_head *lmb_list;
+	struct ppcnuma_node *node;
+	int nid;
+
+	/*
+	 * Read the LMBs
+	 * Link the LMBs to their node
+	 * Update global counter
+	 */
+	lmb_list = get_lmbs(LMB_NORMAL_SORT);
+	if (lmb_list == NULL) {
+		clear_numa_lmb_links();
+		return -1;
+	}
+
+	if (!numa.node_count) {
+		clear_numa_lmb_links();
+		free_lmbs(lmb_list);
+		return -EINVAL;
+	}
+
+	ppcnuma_foreach_node(&numa, nid, node) {
+		say(INFO, "node %4d %4d CPUs %8d LMBs\n",
+		    nid, node->n_cpus, node->n_lmbs);
+	}
+
+	clear_numa_lmb_links();
+	free_lmbs(lmb_list);
+    return 0;
+}
+
 int do_mem_kernel_dlpar(void)
 {
 	char cmdbuf[128];
 	int rc, offset;
-
 
 	if (usr_action == REMOVE && usr_drc_count && !usr_drc_index) {
 		build_numa_topology();
@@ -1761,7 +1796,11 @@ int do_mem_kernel_dlpar(void)
 			 */
 			say(WARN, "Can't do NUMA based removal operation.\n");
 		}
-	}
+	} else if (usr_action == ADD) {
+        build_numa_topology();
+        if (numa_enabled)
+            numa_add_info(usr_drc_count);
+    }
 
 	offset = sprintf(cmdbuf, "%s ", "memory");
 
@@ -1791,8 +1830,13 @@ int do_mem_kernel_dlpar(void)
 	 */
 	if (rc)
 		report_resource_count(0);
-	else
+	else {
 		report_resource_count(usr_drc_count);
+ 
+        if (usr_action == ADD && numa_enabled) {
+            numa_add_info(usr_drc_count);
+        }
+    }
 
 	return rc;
 }
