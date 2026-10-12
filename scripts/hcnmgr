@@ -190,6 +190,17 @@ hcnid_state_list()
 	[ $revert -eq 0 ] || shopt -u nullglob
 }
 
+#
+# function load_bonding
+#	Validate bonding module is loaded
+#
+load_bonding() {
+	hcnlog DEBUG "HCNMGR: Loading bonding module if not already present"
+	if ! modprobe bonding $BOND_MODPROBE_OPTS; then
+		err $E_NOMODULE
+	fi
+}
+
 # function search_dev:
 #	Given DRX_INDEX, Search for device-tree, looking for migratable SR_IOV
 #	backend vnic or ibmveth device to configure hybrid network
@@ -535,6 +546,7 @@ do_config_vdevice_wicked() {
 }
 
 do_config_vdevice() {
+	load_bonding
 	hcnid_state_create "$HCNID"
 	case $SERVICE in
 		NetworkManager.service)
@@ -1041,6 +1053,9 @@ scanhcn_wicked() {
 	done
 
 	# Configure (and set up) actual bonds with current device list
+	if [ ${#hcnids[@]} -gt 0 ]; then
+		load_bonding
+	fi
 	for hcnid in "${hcnids[@]}" ; do
 		local bond="bond$hcnid"
 		local primary="${hcn_primary[$hcnid]}"
@@ -1205,12 +1220,6 @@ fi
 
 #Init the distribution and the network service
 check_network_service
-
-#Validate bonding module is loaded
-hcnlog DEBUG "HCNMGR: Loading bonding module if not already present"
-if ! modprobe bonding $BOND_MODPROBE_OPTS; then
-	err $E_NOMODULE
-fi
 
 #Parse the DRC_INDEX and HCN_ID from the arguments
 for param in "$@"; do
